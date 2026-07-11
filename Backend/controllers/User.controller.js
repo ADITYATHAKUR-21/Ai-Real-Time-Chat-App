@@ -1,6 +1,8 @@
 import User from '../models/User.model.js';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { json } from 'stream/consumers';
 
 export const registerUser = async (req, res) => {
   try {
@@ -35,28 +37,6 @@ export const registerUser = async (req, res) => {
 
     user.verification = token;
     await user.save();
-    // send mail
-    //   const nodemailer = require('nodemailer');
-
-    //   // Create a transporter using SMTP
-    //   const transporter = nodemailer.createTransport({
-    //     host: process.env.MAILTRAP_HOST,
-    //     port: process.env.MAILTRAP_PORT,
-    //     secure: false, // use STARTTLS (upgrade connection to TLS after connecting)
-    //     auth: {
-    //       user: process.env.MAILTRAP_USER,
-    //       pass: process.env.MAILTRAP_PASSWORD,
-    //     },
-    //   });
-    //   const mailOption = {
-    //     from: process.env.MAILTRAP_SENDER, // sender address
-    //     to: user.email, // list of recipients
-    //     subject: 'verify your email', // subject line
-    //     text: `Please click on the link:
-    //     ${process.env.BASE_URL}/api/v1/users/verify/${token}
-    //      `,
-    //   };
-    //   await transporter.sendMail(mailOption);
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -71,8 +51,83 @@ export const registerUser = async (req, res) => {
       error: error.message,
     });
   }
-  // create user in database
-  // create verification token
-  // save token in data base
-  // send success status to user
+};
+
+export const verifyUser = async (req, res) => {
+  // rgt token from url
+  const { token } = req.params;
+  console.log(token);
+  if (!token) {
+    return res.status(400).json({
+      message: 'Invalid token',
+    });
+  }
+
+  const user = await User.findOne({ verification: token });
+
+  if (!user) {
+    return res.status(400).json({
+      message: 'Invalid token',
+    });
+  }
+  user.isVerified = true;
+  user.verification = undefined;
+
+  await user.save();
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: 'All filed are required ',
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        message: 'invalid email or password',
+      });
+    }
+
+    const isMatch = bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: 'Password is wrong ',
+      });
+    }
+
+    const token = jwt.sign({ id: user._id }, 'shhhhh', {
+      expiresIn: '24h',
+    });
+
+    const cookieOption = {
+      httpOnly: true,
+      secure: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    };
+
+    res.cookie('test', token, cookieOption);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successfully',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(200).json({
+      success: false,
+      message: 'User is not login',
+    });
+  }
 };
