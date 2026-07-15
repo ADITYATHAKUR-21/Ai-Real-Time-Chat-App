@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { json } from 'stream/consumers';
+import dotenv from 'dotenv'
 
 export const registerUser = async (req, res) => {
   try {
@@ -14,8 +15,8 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    console.log('Email:', email);
-    // check if already register
+    
+   
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -102,7 +103,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ id: user._id }, 'shhhhh', {
+    const token = jwt.sign({ id: user._id, role: user.role}, process.env.JWT_SECRET, {
       expiresIn: '24h',
     });
 
@@ -112,7 +113,7 @@ export const login = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     };
 
-    res.cookie('test', token, cookieOption);
+    res.cookie('token', token, cookieOption);
 
     res.status(200).json({
       success: true,
@@ -120,6 +121,7 @@ export const login = async (req, res) => {
       token,
       user: {
         id: user._id,
+        role: user.role,
         name: user.name,
       },
     });
@@ -131,3 +133,46 @@ export const login = async (req, res) => {
     });
   }
 };
+
+export const getMe = async (req,res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password')
+
+    if(!user){
+      return res.status(400).json({
+        succuss: false,
+        message: "User is not fond"
+      })
+    }
+    res.status(200).json({
+      success: true,
+      user,
+    });
+
+    
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "User dose not get"
+    })
+    
+  }
+} 
+
+export const logoutUser = async (req,res) => {
+  try {
+
+
+    
+  } catch (error) {
+    
+  }
+}
+
+export const forgotPassword = async(req,res) =>  {
+  try {
+    
+  } catch (error) {
+    
+  }
+}
