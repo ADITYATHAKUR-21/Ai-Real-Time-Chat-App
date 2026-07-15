@@ -141,7 +141,7 @@ export const getMe = async (req,res) => {
     if(!user){
       return res.status(400).json({
         succuss: false,
-        message: "User is not fond"
+        message: "User is not found"
       })
     }
     res.status(200).json({
@@ -153,18 +153,27 @@ export const getMe = async (req,res) => {
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: "User dose not get"
+      message: "User  not get"
     })
     
   }
 } 
 
-export const logoutUser = async (req,res) => {
+export const logoutUser = (req,res) => {
   try {
+    res.cookie('token', '');
+     return res.status(200).json({
+      success: true,
+      message: "User logout "
+     });
 
 
     
   } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "User log out issue"
+    });
     
   }
 }
