@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 const  Hero = () => {
   return (
     <section className="pt-32 pb-24">
-      <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center border-be-orange-100">
         <div>
           <h1 className="text-6xl font-bold leading-tight">
             Real-Time AI Chat
@@ -28,7 +28,7 @@ const  Hero = () => {
           </div>
         </div>
 
-        <div className="bg-gray-100 rounded-3xl  flex items-center justify-center text-2xl">
+        <div className="bg-gray-100 rounded-3xl h-125 flex items-center justify-center text-2xl">
           Chat Preview
         </div>
       </div>
