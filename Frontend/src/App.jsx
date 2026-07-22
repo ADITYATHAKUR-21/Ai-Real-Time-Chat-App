@@ -10,7 +10,6 @@ import Contact from "./pages/Contact";
 
 function App() {
   const [authMode, setAuthMode] = useState(null);
-  // null | "login" | "signup"
 
   return (
     <>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { loginUser, registerUser } from "../api/auth";
 
 const AuthModal = ({ authMode, setAuthMode }) => {
   const [formData, setFormData] = useState({
@@ -8,69 +8,61 @@ const AuthModal = ({ authMode, setAuthMode }) => {
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   if (!authMode) return null;
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  const clearForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setLoading(true);
+
     try {
       let response;
 
       if (authMode === "signup") {
-        response = await axios.post(
-          "http://localhost:5000/api/v1/auth/register",
-          {
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-          },
-          {
-            withCredentials: true,
-          },
-        );
+        response = await registerUser(formData);
       } else {
-        response = await axios.post(
-          "http://localhost:5000/api/v1/auth/login",
-          {
-            email: formData.email,
-            password: formData.password,
-          },
-          {
-            withCredentials: true,
-          },
-        );
+        response = await loginUser({
+          email: formData.email,
+          password: formData.password,
+        });
       }
-
-      console.log(response.data);
 
       alert(response.data.message);
 
-      setAuthMode(null);
+      console.log(response.data);
 
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-      });
+      clearForm();
+
+      setAuthMode(null);
     } catch (error) {
-      console.log(error);
+      console.log(error.response?.data);
 
       alert(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="relative w-105 rounded-2xl bg-white p-8 shadow-2xl">
-        {/* Close Button */}
-
         <button
           onClick={() => setAuthMode(null)}
           className="absolute right-5 top-5 text-2xl hover:text-red-500"
@@ -78,10 +70,8 @@ const AuthModal = ({ authMode, setAuthMode }) => {
           ✕
         </button>
 
-        {/* Heading */}
-
         <h2 className="mb-8 text-center text-3xl font-bold">
-          {authMode === "login" ? "Login" : "Create Account"}
+          {authMode === "login" ? "Welcome Back" : "Create Account"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -92,7 +82,8 @@ const AuthModal = ({ authMode, setAuthMode }) => {
               placeholder="Full Name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full rounded-lg border p-3 outline-none focus:border-green-500"
+              className="w-full rounded-lg border p-3 focus:border-green-500 outline-none"
+              required
             />
           )}
 
@@ -102,7 +93,8 @@ const AuthModal = ({ authMode, setAuthMode }) => {
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full rounded-lg border p-3 outline-none focus:border-green-500"
+            className="w-full rounded-lg border p-3 focus:border-green-500 outline-none"
+            required
           />
 
           <input
@@ -111,26 +103,33 @@ const AuthModal = ({ authMode, setAuthMode }) => {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full rounded-lg border p-3 outline-none focus:border-green-500"
+            className="w-full rounded-lg border p-3 focus:border-green-500 outline-none"
+            required
           />
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-green-500 py-3 font-semibold text-white transition hover:bg-green-600"
+            disabled={loading}
+            className="w-full rounded-lg bg-green-500 py-3 font-semibold text-white hover:bg-green-600 disabled:opacity-50"
           >
-            {authMode === "login" ? "Login" : "Sign Up"}
+            {loading
+              ? "Please wait..."
+              : authMode === "login"
+                ? "Login"
+                : "Create Account"}
           </button>
         </form>
-
-        {/* Switch */}
 
         <div className="mt-6 text-center">
           {authMode === "login" ? (
             <p>
               Don't have an account?{" "}
               <button
-                onClick={() => setAuthMode("signup")}
                 className="font-semibold text-green-600"
+                onClick={() => {
+                  clearForm();
+                  setAuthMode("signup");
+                }}
               >
                 Sign Up
               </button>
@@ -139,8 +138,11 @@ const AuthModal = ({ authMode, setAuthMode }) => {
             <p>
               Already have an account?{" "}
               <button
-                onClick={() => setAuthMode("login")}
                 className="font-semibold text-green-600"
+                onClick={() => {
+                  clearForm();
+                  setAuthMode("login");
+                }}
               >
                 Login
               </button>

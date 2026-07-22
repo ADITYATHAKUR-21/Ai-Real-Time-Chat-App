@@ -25,7 +25,7 @@ app.use(
   cors({
     origin: process.env.BASE_URL,
     credentials: true,
-    methods: ['GET', 'POST', 'DELETE', 'OPTION'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTION'],
     allowedHeaders: ['Content-type', 'Authorization'],
   })
 );
